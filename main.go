@@ -15,7 +15,7 @@ func main() {
     config.ConnectDatabase()
 
     // Migrate the models
-    config.DB.AutoMigrate(&models.User{}, &models.LeverageTransaction{}, &models.GoldHolding{}, &models.MarginCall{})
+    config.DB.AutoMigrate(&models.User{}, &models.GoldHolding{}, &models.LeverageTransaction{},  &models.MarginCall{})
     fmt.Println("Database migrations completed!")
 
     // Initialize Gin engine
