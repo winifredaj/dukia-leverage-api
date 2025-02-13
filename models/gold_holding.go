@@ -9,4 +9,5 @@ type GoldHolding struct {
 	CurrentValue 	float64 	`gorm:"not null"`
 	GoldType 		string	 	`gorm:"not null"`
 	Status  		string 		`gorm:"type:enum('active','pledged','liquidated'); default:'active'"`
+=======
 }
