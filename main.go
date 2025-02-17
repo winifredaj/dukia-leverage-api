@@ -1,22 +1,43 @@
 package main
 
-import(
+import (
 	"dukia-leverage-api/config"
 	"dukia-leverage-api/routes"
+	"log"
+	"reflect"
+
 	"github.com/gin-gonic/gin"
 
-    "dukia-leverage-api/models"
-    "fmt"
-
+	"dukia-leverage-api/models"
+	"fmt"
 )
 
 func main() {
 	// Load the configuration
     config.ConnectDatabase()
 
+    // Print all registered models 
+    modelsToMigrate := []interface{}{
+        &models.User{},
+        &models.GoldHolding{},
+        &models.LeverageTransaction{},
+        &models.MarginCall{},
+    }
+    fmt.Println("Checking all registered models:")
+    for _, model := range modelsToMigrate {
+        fmt.Println(" - ", reflect.TypeOf(model))
+        }
+
+    fmt.Println("Checking if AutoMigraion is running...")
+
     // Migrate the models
-    config.DB.AutoMigrate(&models.User{}, &models.GoldHolding{}, &models.LeverageTransaction{},  &models.MarginCall{})
-    fmt.Println("Database migrations completed!")
+
+    err:= config.DB.AutoMigrate(&models.User{}, &models.GoldHolding{}, &models.LeverageTransaction{},  &models.MarginCall{})
+    if err != nil {
+        log.Fatalf("Migration failed: %v", err)
+    }
+        log.Println("AutoMigrate executed successfully!")
+
 
     // Initialize Gin engine
     router := gin.Default()
