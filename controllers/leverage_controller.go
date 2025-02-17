@@ -8,6 +8,7 @@ import (
 
 	"dukia-leverage-api/config"
 	"dukia-leverage-api/models"
+    "dukia-leverage-api/services"
 )
 
 // GetLeverage(Placeholder function for now)
@@ -43,14 +44,55 @@ func GetLeverage(c *gin.Context) {
         c.JSON(http.StatusBadRequest, gin.H{"error": "GoldHoldingID cannot be 0 "})
         return  
     }
+}
     
     //Check if user has sufficient balance
-    //To-Do: Implement a real-world validation for user balance
-    //if user.Balance < request.LeverageAmount {
-    //    c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Insufficient balance"})
-    //    return  
-    //}
+    func CheckEligibility(c *gin.Context){
+        userID := c.Query("user_id")
+        if userID == "" {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "User ID is required"})
+            return
+        }
 
+        //Fetch user's gold holdings from the database and check if they are already in the database
+        goldHoldings, err := models.GetGoldHoldingsByUserID(userID)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error":"Failed to retrieve gold holdings"})
+            return
+            }
+
+            totalGoldWeight:= goldHoldings.TotalWeight() // Implement this method
+
+            if totalGoldWeight < 50 { // Implement this method
+                c.JSON(http.StatusOK, gin.H{
+                    "eligible": false,
+                    "max_loan_amount" : 0,
+                    "message": "Insufficient gold balance. Minimumo 50grams required.",
+                })
+                return
+            }
+            //Fetch current market price of gold
+            goldPrice, err := services.GetCurrentGoldPrice()
+            if err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error":"Failed to retrieve market price"})
+                return
+            }
+
+            //Calculate total value of user's gold holdings
+            totalGoldValue := totalGoldWeight * goldPrice
+
+            //Calculate maximum loan amountbased on LTV ratio
+
+            ltvRatio := 0.75
+            maxLoanAmount := totalGoldValue * ltvRatio
+
+            c.JSON(http.StatusOK, gin.H{
+                "eligible": true,
+                "max_loan_amount" : maxLoanAmount,
+                "message": "User is eligible for leverage application.",
+            })
+        
+    
 
     //Ensure gold holding exists
     var goldHolding models.GoldHolding

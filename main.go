@@ -3,6 +3,8 @@ package main
 import (
 	"dukia-leverage-api/config"
 	"dukia-leverage-api/routes"
+    "dukia-leverage-api/services"
+    "os"
 	"log"
 	"reflect"
 
@@ -15,6 +17,7 @@ import (
 func main() {
 	// Load the configuration
     config.ConnectDatabase()
+
 
     // Print all registered models 
     modelsToMigrate := []interface{}{
@@ -37,8 +40,10 @@ func main() {
         log.Fatalf("Migration failed: %v", err)
     }
         log.Println("AutoMigrate executed successfully!")
-
-
+   
+    //Trigger liqidation process
+    services.MonitorLTVandLiquidate()
+    
     // Initialize Gin engine
     router := gin.Default()
 
@@ -48,6 +53,5 @@ func main() {
 
     // Start the server
     router.Run(":8080")
-
-    
+       
 }
