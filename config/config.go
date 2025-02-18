@@ -48,6 +48,10 @@ func ConnectDatabase() {
 		CREATE TYPE margincall_status AS ENUM ('pending','resolved','defaulted');
 		END IF;
 
+		IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname ="loan_status') THEN
+		CREATE TYPE loan_status AS ENUM ('inactive','liquidated','resolved','defaulted');
+		END IF;
+
 	END $$
 		`).Error
 	if err != nil {

@@ -8,7 +8,7 @@ import (
 
 	"dukia-leverage-api/config"
 	"dukia-leverage-api/models"
-    "dukia-leverage-api/services"
+	"dukia-leverage-api/utils"
 )
 
 // GetLeverage(Placeholder function for now)
@@ -36,94 +36,74 @@ func GetLeverage(c *gin.Context) {
     }
     fmt.Printf("Received Request: %+v\n", request) // ✅ Debugging print
 
-
-    //Validate GoldHoldingID exists before querying
-    //To-Do: Implement a real-world validation for gold holding existence
-    if request.GoldHoldingID == 0 {
-        fmt.Println("Invalid GoldHoldingID:", request.GoldHoldingID)
-        c.JSON(http.StatusBadRequest, gin.H{"error": "GoldHoldingID cannot be 0 "})
-        return  
-    }
-}
-    
-    //Check if user has sufficient balance
-    func CheckEligibility(c *gin.Context){
-        userID := c.Query("user_id")
-        if userID == "" {
-            c.JSON(http.StatusBadRequest, gin.H{"error": "User ID is required"})
-            return
-        }
-
-        //Fetch user's gold holdings from the database and check if they are already in the database
-        goldHoldings, err := models.GetGoldHoldingsByUserID(userID)
-        if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"error":"Failed to retrieve gold holdings"})
-            return
-            }
-
-            totalGoldWeight:= goldHoldings.TotalWeight() // Implement this method
-
-            if totalGoldWeight < 50 { // Implement this method
-                c.JSON(http.StatusOK, gin.H{
-                    "eligible": false,
-                    "max_loan_amount" : 0,
-                    "message": "Insufficient gold balance. Minimumo 50grams required.",
-                })
-                return
-            }
-            //Fetch current market price of gold
-            goldPrice, err := services.GetCurrentGoldPrice()
-            if err != nil {
-                c.JSON(http.StatusInternalServerError, gin.H{"error":"Failed to retrieve market price"})
-                return
-            }
-
-            //Calculate total value of user's gold holdings
-            totalGoldValue := totalGoldWeight * goldPrice
-
-            //Calculate maximum loan amountbased on LTV ratio
-
-            ltvRatio := 0.75
-            maxLoanAmount := totalGoldValue * ltvRatio
-
-            c.JSON(http.StatusOK, gin.H{
-                "eligible": true,
-                "max_loan_amount" : maxLoanAmount,
-                "message": "User is eligible for leverage application.",
-            })
-        
-    
-
-    //Ensure gold holding exists
+  
+    //Check if gold holding exists
     var goldHolding models.GoldHolding
-    result := config.DB.Where("id = ?", request.GoldHoldingID).First(&goldHolding)
-
-    if result.Error != nil {
-        fmt.Println("Gold Holding Not Found:", result.Error)  // Debugging print
-        c.JSON(http.StatusNotFound, gin.H{"error": "Gold Holding ID not found"})
+    if err := config.DB.Where("id = ?", request.GoldHoldingID).First(&goldHolding).Error; err != nil {
+        c.JSON(http.StatusNotFound,gin.H{"error":"Gold Holding ID not found"})
         return
     }
-    //Print the retrieved GoldHolding
-    fmt.Printf("Found Gold Holding: %+v\n", goldHolding)
+
+    //Ensure user has atleast 50g of gold
+    if goldHolding.Quantity < 50 {
+        c.JSON(http.StatusBadRequest,gin.H{"error":"Insufficient gold balance. Minimum 50g required."})
+        return
+    }
     
-    //Check if leverage limit(75% of gold holding) has been reached
-    maxLeverage := goldHolding.CurrentValue * 0.75
-    if request.LeverageAmount > maxLeverage {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Leverage amount exceeds allowed limit "})
+    //Fetch current gold price
+    goldPrice, err := utils.GetCurrentGoldPrice()
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error":"Failed to retrieve market price"})
         return
     }
 
+    //Calculate Total value and max leverage
+    totalGoldValue := goldHolding.Quantity * goldPrice
+    maxLeverage := totalGoldValue * 0.75 // 75% of total gold value
+    
+    if request.LeverageAmount > maxLeverage {
+        c.JSON(http.StatusBadRequest,gin.H{"error":"Requested Leverage amount exceeds allowed limit."})
+        return
+    }
+
+    //Calculate net amount and fees
+    processingFee := request.LeverageAmount * 0.01 // 1% processing fee
+    custodianFee := request.LeverageAmount * 0.025// 2.5% custodian fee
+    NetDisbursed := request.LeverageAmount * (processingFee + custodianFee)
+
+   
     //Save leverage requests
     leverage := models.LeverageTransaction{
         UserID:              request.UserID,
         GoldHoldingID:       request.GoldHoldingID,
         LeverageAmount:      request.LeverageAmount,
         TenureMonths:        request.TenureMonths,
+        NetDisbursed:        NetDisbursed,
+        ProcessingFee:       processingFee,
+        CustodianFee:        custodianFee,
+        InterestRate:        28.0, // Hardcoded for now, replace with actual interest rate
         Status:               "pending",
     }
     config.DB.Create(&leverage)
     
 
     c.JSON(http.StatusOK, gin.H{
-        "message": "Leverage request submitted","leverage_id": leverage.ID})
+        "message": "Leverage request submitted successfully!","leverage_id": leverage.ID})
+}
+
+//Placeholder controller functions to be implemented
+
+func ApproveLeverage(c *gin.Context){
+    c.JSON(http.StatusOK,gin.H{"message":"Leverage approved sucessfully"})
+
+
+}
+
+func GetPendingRequests(c *gin.Context){
+    c.JSON(http.StatusOK,gin.H{"message":"Fetched pending requests"})
+
+}
+
+func ForceLiquidate(c *gin.Context){
+    c.JSON(http.StatusOK,gin.H{"message":"Leverage liquidated successfully"})
 }

@@ -49,7 +49,7 @@ func RegisterUser(c *gin.Context) {
 
 // User Login
 func LoginUser(c *gin.Context) {
-	var request struct {
+	var request  struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
@@ -76,7 +76,7 @@ func LoginUser(c *gin.Context) {
 	}
 
 	//Generate JWT token
-	token, err := utils.GenerateToken(user.ID)
+	token, err := utils.GenerateUserToken(user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return

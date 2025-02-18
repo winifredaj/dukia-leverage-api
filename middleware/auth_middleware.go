@@ -11,7 +11,7 @@ import (
 
 // JWTKey is the secret key used to sign and verify JWT tokens
 
-var JWTKey = []byte("secretkey")
+var JWTKey = []byte("usersecretkey")
 
 // JWTMiddleware is a middleware function that checks for a valid JWT token in the request header	
 func JWTMiddleware() gin.HandlerFunc {
@@ -44,3 +44,4 @@ func JWTMiddleware() gin.HandlerFunc {
 	}
 
 }
+

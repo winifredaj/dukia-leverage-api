@@ -4,9 +4,9 @@ import (
 	"dukia-leverage-api/config"
 	"dukia-leverage-api/routes"
     "dukia-leverage-api/services"
-    "os"
 	"log"
 	"reflect"
+    
 
 	"github.com/gin-gonic/gin"
 
@@ -25,6 +25,7 @@ func main() {
         &models.GoldHolding{},
         &models.LeverageTransaction{},
         &models.MarginCall{},
+        &models.Loan{},
     }
     fmt.Println("Checking all registered models:")
     for _, model := range modelsToMigrate {
@@ -35,7 +36,7 @@ func main() {
 
     // Migrate the models
 
-    err:= config.DB.AutoMigrate(&models.User{}, &models.GoldHolding{}, &models.LeverageTransaction{},  &models.MarginCall{})
+    err:= config.DB.AutoMigrate(&models.User{}, &models.GoldHolding{}, &models.LeverageTransaction{},  &models.MarginCall{}, &models.Loan{})
     if err != nil {
         log.Fatalf("Migration failed: %v", err)
     }
@@ -50,6 +51,7 @@ func main() {
     // Register routes
     routes.UserRoutes(router)
 	routes.LeveragingRoutes(router)
+    routes.AdminRoutes(router)
 
     // Start the server
     router.Run(":8080")

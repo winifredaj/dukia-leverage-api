@@ -1,13 +1,15 @@
 package models
 
-//import "errors"
+import "gorm.io/gorm"
 
 //Loan represents a loan in the system
 type Loan struct {
-	ID         		int			`json:"id"`
-	UserID      	int 		`json:"user_id"`
-	Amount      	float64 	`json:"amount"`
-	CollateralGold 	float64
+	gorm.Model      //Use gorm.Model for auto-generated fields
+	ID         		int			`gorm:"primaryKey"`
+	UserID      	int 		`gorm:"not null"`
+	Amount      	float64 	`gorm:"not null"`
+	CollateralGold 	float64     `gorm:"not null"`
+	Status          string      `gorm:"type:loan_status; default:'inactive'"`
 
 }
 

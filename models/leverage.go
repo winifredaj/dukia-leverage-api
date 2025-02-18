@@ -11,6 +11,10 @@ type LeverageTransaction struct {
 	LeverageAmount  float64 `gorm:"not null"`
 	InterestRate    float64 `gorm:"default:28.0"`
 	TenureMonths    int     `gorm:"not null"`
+	NetDisbursed 	float64 `gorm:"not null"`
+	ProcessingFee 	float64 `gorm:"not null"`
+	CustodianFee 	float64 `gorm:"not null"`
+	CurrentLTV      float64 `gorm:"not null"`
 	Status          string  `gorm:"type:leverage_status; default:'pending'"`
 	
 }
