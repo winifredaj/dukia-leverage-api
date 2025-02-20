@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	"os"
 	"testing"
 
@@ -15,10 +17,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"gorm.io/driver/sqlite"
-	"modernc.org/sqlite"
-
-	"gorm.io/gorm"
+	
 )
 
 func TestMain(m *testing.M) {
@@ -29,7 +28,8 @@ func TestMain(m *testing.M) {
     }
 
 	config.DB = testDB
-	os.Exit(m.Run()) // 
+	exitVal := m.Run()
+	os.Exit(exitVal) // 
 }
 
 func setupMockRouter() *gin.Engine {
