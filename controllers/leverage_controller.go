@@ -39,6 +39,8 @@ func GetLeverage(c *gin.Context) {
   
     //Check if gold holding exists
     var goldHolding models.GoldHolding
+    fmt.Println("DEBUG: config.DB is", config.DB)
+    
     if err := config.DB.Where("id = ?", request.GoldHoldingID).First(&goldHolding).Error; err != nil {
         c.JSON(http.StatusNotFound,gin.H{"error":"Gold Holding ID not found"})
         return

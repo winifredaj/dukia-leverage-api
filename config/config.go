@@ -8,25 +8,40 @@ import (
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"path/filepath"
 )
 
 var DB *gorm.DB
 
 func ConnectDatabase() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
 
+	rootPath, _ := filepath.Abs("..") // Moves up one directory
+	envPath := filepath.Join(rootPath, ".env") // Path to.env file in the root directory
+
+	//Load environment variables from.env file
+	err := godotenv.Load(envPath)
+	if err != nil {
+        log.Fatal("Warning: No .env file found in root. Using system environment variables.")
+    }
+	
+	
 	//Build connection strings
-	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_NAME"),
-		os.Getenv("DB_PORT"),
+	dbHost := os.Getenv("DB_HOST")
+    dbUser := os.Getenv("DB_USER")
+    dbPassword := os.Getenv("DB_PASSWORD")
+    dbName := os.Getenv("DB_NAME")
+    dbPort := os.Getenv("DB_PORT")
+    dbSSLMode := os.Getenv("DB_SSLMODE")
+
+	if dbHost == "" || dbUser == "" || dbPassword == "" || dbName == "" || dbPort == "" || dbSSLMode == "" {
+        log.Fatal("Error: Missig required database environment variables.")
+    }
+
+	dsn:= fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
+        dbHost, dbUser, dbPassword, dbName, dbPort, dbSSLMode,
 	)
+	log.Println("Connecting to database with DSN:", dsn)
 
 	//Connect to PostgresSQL server
 	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -36,6 +51,10 @@ func ConnectDatabase() {
 
 	DB = database
 	fmt.Println("Database connected successfully!")
+
+	if DB == nil {
+		log.Fatal("Error: config.DB is nil, database connection not initialized properly.")
+    }
 
 	// Manually create enum type before migrations
 	err = DB.Exec(`DO $$
@@ -48,7 +67,7 @@ func ConnectDatabase() {
 		CREATE TYPE margincall_status AS ENUM ('pending','resolved','defaulted');
 		END IF;
 
-		IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname ="loan_status') THEN
+		IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'loan_status') THEN
 		CREATE TYPE loan_status AS ENUM ('inactive','liquidated','resolved','defaulted');
 		END IF;
 
