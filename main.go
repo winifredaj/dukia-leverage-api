@@ -1,7 +1,6 @@
 package main
 
 import (
-	"dukia-leverage-api/config"
 	"dukia-leverage-api/routes"
     "dukia-leverage-api/services"
 	"log"
@@ -9,6 +8,7 @@ import (
     
 
 	"github.com/gin-gonic/gin"
+    "dukia-leverage-api/config"
 
 	"dukia-leverage-api/models"
 	"fmt"

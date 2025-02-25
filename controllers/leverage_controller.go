@@ -39,10 +39,12 @@ func GetLeverage(c *gin.Context) {
   
     //Check if gold holding exists
     var goldHolding models.GoldHolding
-    fmt.Println("DEBUG: config.DB is", config.DB)
+
+   // fmt.Println("DEBUG: config.DB is", config.DB)
     
     if err := config.DB.Where("id = ?", request.GoldHoldingID).First(&goldHolding).Error; err != nil {
-        c.JSON(http.StatusNotFound,gin.H{"error":"Gold Holding ID not found"})
+        fmt.Println("DEBUG:GoldHolding not found for ID:", request.GoldHoldingID, "Error:", err)
+        c.JSON(http.StatusNotFound,gin.H{"error":"Gold Holding not found"})
         return
     }
 
@@ -71,26 +73,37 @@ func GetLeverage(c *gin.Context) {
     //Calculate net amount and fees
     processingFee := request.LeverageAmount * 0.01 // 1% processing fee
     custodianFee := request.LeverageAmount * 0.025// 2.5% custodian fee
-    NetDisbursed := request.LeverageAmount * (processingFee + custodianFee)
+    netDisbursed := request.LeverageAmount - (processingFee + custodianFee)
 
-   
+    if netDisbursed <= 0{
+        c.JSON(http.StatusBadRequest,gin.H{"error":"Insuffiient leverage net disbursed amount "})
+        return
+    }
+
     //Save leverage requests
     leverage := models.LeverageTransaction{
         UserID:              request.UserID,
         GoldHoldingID:       request.GoldHoldingID,
         LeverageAmount:      request.LeverageAmount,
         TenureMonths:        request.TenureMonths,
-        NetDisbursed:        NetDisbursed,
+        NetDisbursed:        netDisbursed,
         ProcessingFee:       processingFee,
         CustodianFee:        custodianFee,
         InterestRate:        28.0, // Hardcoded for now, replace with actual interest rate
         Status:               "pending",
     }
-    config.DB.Create(&leverage)
+    
+    if err := config.DB.Create(&leverage).Error; err != nil {
+        fmt.Println(" Failed to save leverage transaction", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error":"Failed to save leverage request"})
+        return
+    }
     
 
     c.JSON(http.StatusOK, gin.H{
-        "message": "Leverage request submitted successfully!","leverage_id": leverage.ID})
+        "message": "Leverage request submitted successfully!",
+        "leverage_id": leverage.ID,
+    })
 }
 
 //Placeholder controller functions to be implemented

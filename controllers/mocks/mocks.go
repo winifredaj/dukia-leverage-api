@@ -29,6 +29,7 @@ func (m *MockDB) First(dest interface{}, conds ...interface{}) *gorm.DB {
 		CurrentValue: 	5000,  // Example value
 		GoldType: 		"24k",
 	}
+	return m.DB
 }
 	
     return &gorm.DB{}

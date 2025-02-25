@@ -8,20 +8,20 @@ import (
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"path/filepath"
+	//"path/filepath"
 )
 
 var DB *gorm.DB
 
 func ConnectDatabase() {
 
-	rootPath, _ := filepath.Abs("..") // Moves up one directory
-	envPath := filepath.Join(rootPath, ".env") // Path to.env file in the root directory
+	//rootPath, _ := filepath.Abs("..") // Moves up one directory
+	//envPath := filepath.Join(rootPath, ".env") // Path to.env file in the root directory
 
 	//Load environment variables from.env file
-	err := godotenv.Load(envPath)
+	err := godotenv.Load(".env")
 	if err != nil {
-        log.Fatal("Warning: No .env file found in root. Using system environment variables.")
+        fmt.Println("Warning: No .env file found in root. Using system environment variables.")
     }
 	
 	
@@ -34,7 +34,7 @@ func ConnectDatabase() {
     dbSSLMode := os.Getenv("DB_SSLMODE")
 
 	if dbHost == "" || dbUser == "" || dbPassword == "" || dbName == "" || dbPort == "" || dbSSLMode == "" {
-        log.Fatal("Error: Missig required database environment variables.")
+        log.Fatal("Error: Missing required database environment variables.")
     }
 
 	dsn:= fmt.Sprintf(
@@ -56,20 +56,35 @@ func ConnectDatabase() {
 		log.Fatal("Error: config.DB is nil, database connection not initialized properly.")
     }
 
+	
+
 	// Manually create enum type before migrations
 	err = DB.Exec(`DO $$
 	BEGIN
 	    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'leverage_status') THEN
-		CREATE TYPE leverage_status AS ENUM ('pending','approved','active','defaulted','liquidated');
+			CREATE TYPE leverage_status AS ENUM ('pending','approved','active','defaulted','liquidated');
 		END IF;
 		
 		IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'margincall_status') THEN
-		CREATE TYPE margincall_status AS ENUM ('pending','resolved','defaulted');
+			CREATE TYPE margincall_status AS ENUM ('pending','resolved','defaulted');
 		END IF;
 
 		IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'loan_status') THEN
-		CREATE TYPE loan_status AS ENUM ('inactive','liquidated','resolved','defaulted');
+			CREATE TYPE loan_status AS ENUM ('inactive','liquidated','resolved','defaulted');
 		END IF;
+
+		IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'gold_holdings') THEN
+        	IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='gold_holdings' AND column_name='quantity') THEN
+            	ALTER TABLE gold_holdings ADD COLUMN quantity DECIMAL DEFAULT 0 NOT NULL;
+        	END IF;
+   		 END IF;
+    
+    	IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'leverage_transactions') THEN
+        	IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='leverage_transactions' AND column_name='net_disbursed') THEN
+            	ALTER TABLE leverage_transactions ADD COLUMN net_disbursed DECIMAL DEFAULT 0 NOT NULL;
+        	END IF;
+    	END IF;
+
 
 	END $$
 		`).Error

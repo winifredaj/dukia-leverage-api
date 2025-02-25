@@ -1,6 +1,7 @@
 package utils
 
 import(
+    "os"
     "errors"
     "net/http"
     "encoding/json"
@@ -9,9 +10,19 @@ import(
 )
 
 //GetCurrrentGoldPrice fetches the current market price of gold
-const goldPriceAPI = "https://api.metalsapi.com/latest?access_key=YOUR_API_KEY&base=USD&symbols=XAU"
+const mockGoldPrice = 1000.0
+//const goldPriceAPI = "https://api.metalsapi.com/latest?access_key=YOUR_API_KEY&base=USD&symbols=XAU"
 
 func GetCurrentGoldPrice() (float64, error) {
+    //Mocked function for testing 
+    if  os.Getenv("TEST_ENV") == "true"{
+        log.Println("Returning mocked gold price for testing...")
+        return mockGoldPrice, nil  // Mocked gold price for tests  
+    }
+
+    // Actual request to the API
+    goldPriceAPI := "https://api.metalsapi.com/latest?access_key=YOUR_API_KEY&base=USD&symbols=XAU"
+
     response, err := http.Get(goldPriceAPI)
     if err != nil {
         log.Printf("Error fetching gold price: %v", err)
