@@ -8,7 +8,6 @@ import (
 	"reflect"
 
 	"dukia-leverage-api/config"
-    "dukia-leverage-api/controllers"
 	"github.com/gin-gonic/gin"
 
 	"dukia-leverage-api/models"
@@ -18,6 +17,27 @@ import (
 func main() {
 	// Load the configuration
 	config.ConnectDatabase()
+
+    // Initialize Gin engine
+	router := gin.Default()
+
+    port := os.Getenv("PORT")
+    if port == "" {
+    port = "8080" // Default port for local development
+    }
+    router.Run(":" + port)
+
+    router.GET("/", func(c *gin.Context) {
+        c.JSON(200, gin.H{"message": "Dukia Leverage API is running"})
+    })
+
+
+    // Register routes
+	routes.UserRoutes(router)
+	routes.LeveragingRoutes(router)
+	routes.AdminRoutes(router)
+
+
 
 	// Print all registered models
 	modelsToMigrate := []interface{}{
@@ -35,7 +55,6 @@ func main() {
 	fmt.Println("Checking if AutoMigraion is running...")
 
 	// Migrate the models
-
 	err := config.DB.AutoMigrate(&models.User{}, &models.GoldHolding{}, &models.LeverageTransaction{}, &models.MarginCall{}, &models.Loan{})
 	if err != nil {
 		log.Fatalf("Migration failed: %v", err)
@@ -45,28 +64,9 @@ func main() {
 	//Trigger liqidation process
 	services.MonitorLTVandLiquidate()
 
-	// Initialize Gin engine
-	router := gin.Default()
-
-    // Middleware
-    api := router.Group("/api")
-    {
-        api.POST("/auth/register", controllers.RegisterUser)
-        api.POST("/auth/login", controllers.LoginUser)
-    }
 
 
-	// Register routes
-	routes.UserRoutes(router)
-	routes.LeveragingRoutes(router)
-	routes.AdminRoutes(router)
-
-    port := os.Getenv("PORT")
-    if port == "" {
-    port = "8080" // Default port for local development
-    }
-    router.Run(":" + port)
-
+   
 
 	// Start the server
 	//router.Run(":8080")
