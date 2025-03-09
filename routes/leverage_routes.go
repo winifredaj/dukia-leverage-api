@@ -7,7 +7,7 @@ import (
 )
 
 func LeveragingRoutes(router *gin.Engine) {
-	leverageGroup := router.Group("/leverage").Use(middleware.JWTMiddleware("use"))
+	leverageGroup := router.Group("leverage").Use(middleware.JWTMiddleware("use"))
 	{
 		//leverageGroup.GET("/status/:user_id", controllers.GetLeverage)
 		leverageGroup.GET("/status/:user_id", controllers.GetLeverageDetails)

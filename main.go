@@ -25,18 +25,24 @@ func main() {
     if port == "" {
     port = "8080" // Default port for local development
     }
-    router.Run(":" + port)
-
+    
     router.GET("/", func(c *gin.Context) {
         c.JSON(200, gin.H{"message": "Dukia Leverage API is running"})
     })
 
+	router.GET("/debug/routes", func(c *gin.Context) {
+		routes := router.Routes()
+		for _, r := range routes {
+			fmt.Println("Registered Route:", r.Method, r.Path)
+		}
+		c.JSON(200, gin.H{"routes": routes})
+	})
+	
 
-    // Register routes
+    // Register AP routes
 	routes.UserRoutes(router)
 	routes.LeveragingRoutes(router)
 	routes.AdminRoutes(router)
-
 
 
 	// Print all registered models
@@ -64,11 +70,12 @@ func main() {
 	//Trigger liqidation process
 	services.MonitorLTVandLiquidate()
 
-
-
    
+    
+	//router.Run(":" + port) 
+	router.Run("0.0.0.0:" + port) 
 
 	// Start the server
-	//router.Run(":8080")
+	// router.Run(":8080")
 
 }
