@@ -6,9 +6,9 @@ import (
 )
 
 func UserRoutes(router *gin.Engine) {
-	userGroup := router.Group("/auth")
+	userGroup := router.Group("/api")
 	{
-		userGroup.POST("/register", controllers.RegisterUser)
-		userGroup.POST("/login", controllers.LoginUser)
+		userGroup.POST("/auth/register", controllers.RegisterUser)
+		userGroup.POST("/auth/login", controllers.LoginUser)
 	}
 }

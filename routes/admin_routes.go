@@ -14,19 +14,19 @@ import (
 
 func AdminRoutes(router *gin.Engine) {
 	//Login route without middleware
-	router.POST("/admin/auth/login", controllers.LoginAdmin)
+	router.POST("/api/admin/auth/login", controllers.LoginAdmin)
 
 	//Admin routes with middleware
-	admin := router.Group("/admin")
+	admin := router.Group("/api")
 	admin.Use(AdminAuthMiddleware())
 	{
 
-		admin.POST("/approve-leverage/:id", controllers.ApproveLeverageRequest)
-		admin.POST("/reject-leverage/:id", controllers.RejectLeverageRequest)
-		admin.GET("/leverage-requests", controllers.GetPendingRequests)
-		admin.POST("/liquidate-leverage", controllers.ForceLiquidate)
-		admin.POST("/resolve-margin-call/:id", controllers.ManageMarginCall)
-		admin.GET("/defaulted-leverages", controllers.CheckDefaultedLoans)
+		admin.POST("/admin/approve-leverage/:id", controllers.ApproveLeverageRequest)
+		admin.POST("/admin/reject-leverage/:id", controllers.RejectLeverageRequest)
+		admin.GET("/admin/leverage-requests", controllers.GetPendingRequests)
+		admin.POST("/admin/liquidate-leverage", controllers.ForceLiquidate)
+		admin.POST("/admin/resolve-margin-call/:id", controllers.ManageMarginCall)
+		admin.GET("/admin/defaulted-leverages", controllers.CheckDefaultedLoans)
 
 	}
 

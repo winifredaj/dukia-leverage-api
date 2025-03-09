@@ -19,12 +19,24 @@ func main() {
 	config.ConnectDatabase()
 
     // Initialize Gin engine
+	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
+
+	// Define API group
+    //api := router.Group("/api")
+
+    // ✅ Pass `router`, not `api`, to route functions
+    routes.UserRoutes(router)
+    routes.LeveragingRoutes(router)
+    routes.AdminRoutes(router)
+
 
     port := os.Getenv("PORT")
     if port == "" {
-    port = "8080" // Default port for local development
+    port = "10000" // Default port for local development
     }
+
+	log.Println("Starting server on port " + port)
     
     router.GET("/", func(c *gin.Context) {
         c.JSON(200, gin.H{"message": "Dukia Leverage API is running"})
@@ -38,12 +50,6 @@ func main() {
 		c.JSON(200, gin.H{"routes": routes})
 	})
 	
-
-    // Register AP routes
-	routes.UserRoutes(router)
-	routes.LeveragingRoutes(router)
-	routes.AdminRoutes(router)
-
 
 	// Print all registered models
 	modelsToMigrate := []interface{}{
