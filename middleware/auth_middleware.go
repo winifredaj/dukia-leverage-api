@@ -46,26 +46,17 @@ func JWTMiddleware(expectedRole string) gin.HandlerFunc {
 		}
 
 		tokenString := parts[1]
-	 // Load the JWT secret key from environment variable USER_JWT_SECRET
+		// Load the JWT secret key from environment variable USER_JWT_SECRET
 		userSecretKey := []byte(os.Getenv("USER_JWT_SECRET"))
 
 		// Validate token using utils.ValidateToken
 		token, claims, err := utils.ValidateToken(tokenString, userSecretKey)
-		if err != nil ||token == nil || !token.Valid {
+		if err != nil || token == nil || !token.Valid {
 			log.Println("JWTMiddleware: Invalid token for", c.Request.URL.Path, "-", err)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			c.Abort()
 			return
 		}
-
-		// Extract claims properly
-		//claimsMap, ok := claims.(jwt.MapClaims)
-		//if !ok {
-			//log.Println("JWTMiddleware: Invalid token claims for", c.Request.URL.Path)
-			//c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
-			//c.Abort()
-			//return
-		//}
 
 		// Extract user role
 		role, roleExists := claims["role"].(string)
@@ -93,7 +84,7 @@ func JWTMiddleware(expectedRole string) gin.HandlerFunc {
 		// Extract email safely
 		if email, exists := claims["email"].(string); exists {
 			c.Set("email", email)
-		
+
 		}
 
 		// Set user role in context

@@ -4,9 +4,9 @@ import (
 	"dukia-leverage-api/config"
 	"dukia-leverage-api/models"
 	"dukia-leverage-api/utils"
+	"log"
 	"net/http"
 	"os"
-	"log"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -44,8 +44,8 @@ func RegisterUser(c *gin.Context) {
 	user := models.User{
 		FirstName: input.FirstName,
 		LastName:  input.LastName,
-        Email:    input.Email,
-        Password: string(hashedPassword),
+		Email:     input.Email,
+		Password:  string(hashedPassword),
 	}
 
 	// Save user in database and return response
@@ -57,12 +57,12 @@ func RegisterUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "User registered successfully",
 		"user":    user,
-    })
+	})
 }
 
 // User Login
 func LoginUser(c *gin.Context) {
-	var request  struct {
+	var request struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
@@ -88,7 +88,7 @@ func LoginUser(c *gin.Context) {
 	}
 
 	//Generate JWT token
-	token, err := utils.GenerateToken(user.ID, user.Email,"user")
+	token, err := utils.GenerateToken(user.ID, user.Email, "user")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
@@ -98,18 +98,17 @@ func LoginUser(c *gin.Context) {
 }
 
 //AdminLogin handles login for admins and generates an admin JWT token
-func LoginAdmin(c *gin.Context){
-    var input struct {
-        Email    string `json:"email" binding:"required,email"`
-        Password string `json:"password" binding:"required"`
-    }
+func LoginAdmin(c *gin.Context) {
+	var input struct {
+		Email    string `json:"email" binding:"required,email"`
+		Password string `json:"password" binding:"required"`
+	}
 
-    if err := c.BindJSON(&input); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+	if err := c.BindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
-        }
-	
-	
+	}
+
 	//Retrieve admin credentials from environment variables
 	adminEmail := os.Getenv("ADMIN_EMAIL")
 	adminPassword := os.Getenv("ADMIN_PASSWORD")
@@ -121,31 +120,24 @@ func LoginAdmin(c *gin.Context){
 	if adminEmail == "" || adminPassword == "" {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Admin credentials not set"})
 		return
-		
+
 	}
 
-    //Check admin credentials
+	//Check admin credentials
 	if input.Email != adminEmail || !utils.CheckPasswordHash(input.Password, adminPassword) {
-        c.JSON(http.StatusUnauthorized, gin.H{"error":"Invalid email or password"})
-        return
-    }
-        
-    //Generate Admin Token 
-    token, err := utils.GenerateToken(1, adminEmail, "admin")
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error":"Failed to generate admin token"})
-        return
-    }
-    c.JSON(http.StatusOK, gin.H{
-        "message": "Admin logged in successfully",
-        "token": token,
-    })
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		return
+	}
 
-
-		// TEMPORARY DEBUG CODE
-		inputPassword := "SecureAdmin123" // Replace with your actual password
-		hash := "$2a$10$fsuT01/2RTlFCFEFoSunK.kw82MD2hBbV80hB12LdZq2vqN1iEgUW"
-		match := utils.CheckPasswordHash(inputPassword, hash)
-		log.Printf("DEBUG: Password Match? %v", match) // Should log "true"
+	//Generate Admin Token
+	token, err := utils.GenerateToken(1, adminEmail, "admin")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate admin token"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Admin logged in successfully",
+		"token":   token,
+	})
 
 }
