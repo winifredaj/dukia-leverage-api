@@ -8,6 +8,7 @@ import (
 	"reflect"
 
 	"dukia-leverage-api/config"
+    "dukia-leverage-api/controllers"
 	"github.com/gin-gonic/gin"
 
 	"dukia-leverage-api/models"
@@ -46,6 +47,14 @@ func main() {
 
 	// Initialize Gin engine
 	router := gin.Default()
+
+    // Middleware
+    api := router.Group("/api")
+    {
+        api.POST("/auth/register", controllers.RegisterUser)
+        api.POST("/auth/login", controllers.LoginUser)
+    }
+
 
 	// Register routes
 	routes.UserRoutes(router)
