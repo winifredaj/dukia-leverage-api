@@ -9,24 +9,23 @@ import (
 	"dukia-leverage-api/controllers"
 	"dukia-leverage-api/utils"
 	"github.com/gin-gonic/gin"
-	// "github.com/golang-jwt/jwt/v4"
+	//"github.com/golang-jwt/jwt/v4"
 )
 
-func AdminRoutes(router *gin.Engine) {
+func AdminRoutes(router *gin.RouterGroup) {
 	//Login route without middleware
-	router.POST("/api/admin/auth/login", controllers.LoginAdmin)
+	router.POST("/admin/auth/login", controllers.LoginAdmin)
 
 	//Admin routes with middleware
-	admin := router.Group("/api")
-	admin.Use(AdminAuthMiddleware())
-	{
+	adminGroup := router.Group("/admin").Use(AdminAuthMiddleware())
 
-		admin.POST("/admin/approve-leverage/:id", controllers.ApproveLeverageRequest)
-		admin.POST("/admin/reject-leverage/:id", controllers.RejectLeverageRequest)
-		admin.GET("/admin/leverage-requests", controllers.GetPendingRequests)
-		admin.POST("/admin/liquidate-leverage", controllers.ForceLiquidate)
-		admin.POST("/admin/resolve-margin-call/:id", controllers.ManageMarginCall)
-		admin.GET("/admin/defaulted-leverages", controllers.CheckDefaultedLoans)
+	{
+		adminGroup.POST("/approve-leverage/:id", controllers.ApproveLeverageRequest)
+		adminGroup.POST("/reject-leverage/:id", controllers.RejectLeverageRequest)
+		adminGroup.GET("/leverage-requests", controllers.GetPendingRequests)
+		adminGroup.POST("/liquidate-leverage", controllers.ForceLiquidate)
+		adminGroup.POST("/resolve-margin-call/:id", controllers.ManageMarginCall)
+		adminGroup.GET("/defaulted-leverages", controllers.CheckDefaultedLoans)
 
 	}
 

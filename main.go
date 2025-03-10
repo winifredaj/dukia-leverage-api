@@ -9,6 +9,7 @@ import (
 
 	"dukia-leverage-api/config"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-contrib/cors"
 
 	"dukia-leverage-api/models"
 	"fmt"
@@ -19,8 +20,10 @@ func main() {
 	config.ConnectDatabase()
 
     // Initialize Gin engine
-	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
+
+	//Enable CORS
+	router.Use(cors.Default())
 
 	// Define API group
     api := router.Group("/api")
@@ -30,15 +33,16 @@ func main() {
     })
 
     // ✅ Pass `router`, not `api`, to route functions
-    routes.UserRoutes(router)
-    routes.LeveragingRoutes(router)
-    routes.AdminRoutes(router)
+    routes.UserRoutes(api)
+    routes.LeveragingRoutes(api)
+    routes.AdminRoutes(api)
 
 
     port := os.Getenv("PORT")
     if port == "" {
     port = "10000" // Default port for local development
     }
+	router.Run(":" + port) 
 
 	log.Println("Starting server on port " + port)
     
@@ -53,7 +57,7 @@ func main() {
 		}
 		c.JSON(200, gin.H{"routes": routes})
 	})
-	
+
 
 	// Print all registered models
 	modelsToMigrate := []interface{}{
@@ -80,12 +84,11 @@ func main() {
 	//Trigger liqidation process
 	services.MonitorLTVandLiquidate()
 
-   
-    
-	//router.Run(":" + port) 
-	router.Run("0.0.0.0:" + port) 
+	
 
-	// Start the server
-	// router.Run(":8080")
+
+
+
+
 
 }

@@ -104,7 +104,7 @@ func LoginAdmin(c *gin.Context) {
 		Password string `json:"password" binding:"required"`
 	}
 
-	if err := c.BindJSON(&input); err != nil {
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}

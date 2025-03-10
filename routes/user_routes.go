@@ -5,10 +5,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func UserRoutes(router *gin.Engine) {
-	userGroup := router.Group("/api")
+func UserRoutes(router *gin.RouterGroup) {
+	userGroup := router.Group("/auth")
 	{
-		userGroup.POST("/auth/register", controllers.RegisterUser)
-		userGroup.POST("/auth/login", controllers.LoginUser)
+		userGroup.POST("/register", controllers.RegisterUser)
+		userGroup.POST("/login", controllers.LoginUser)
 	}
 }
